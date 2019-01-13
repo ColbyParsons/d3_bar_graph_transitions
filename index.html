@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Tree Price Per Company Per Contract</title>
+    <style>
+    	
+    </style>
+</head>
+<body>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script>
+
+	var data = {"Vanderhoof":[
+								{"price":46.9, "company": "Summit"},
+								{"price":45.3, "company": "Blue Collar"},
+								{"price":44.2, "company": "Coast Range"},
+								{"price":39.3, "company": "Folklore"},
+								{"price":37.8, "company": "Celtic"},
+								{"price":34.4, "company": "Spectrum"},
+								{"price":28.6, "company": "Seneca"}
+							],
+				"Kamloops":[
+								{"price":69.7, "company": "Folklore"},
+								{"price":66.5, "company": "Zanzibar"},
+								{"price":66.4, "company": "Celtic"},
+								{"price":63.6, "company": "Brinkman"},
+								{"price":51.8, "company": "Apex"},
+								{"price":48.2, "company": "A&G"},
+								{"price":47.0, "company": "Evergreen"}
+							]
+				}
+
+	var margin = {"left":80,
+				  "right":80,
+				  "top":80,
+				  "bottom":30};
+
+	var body = d3.select("body");
+	var width = 1000;
+	var height = 350;
+	var barheight = 30;
+	var titleHeight = 30;
+	var isKamloops = true;
+	var buttonheight = 20;
+	var buttonwidth = 150;
+
+	var svg = body.append("svg")
+				  .attr("width", width)
+				  .attr("height", height);
+
+	var vanderhoofData = data.Vanderhoof;
+	var kamloopsData = data.Kamloops;
+
+	var xScaler = d3.scaleLinear()
+    	 			 .domain([0, d3.max(kamloopsData, d => d.price)]).nice()
+    				 .range([0, width - margin.right - margin.left]);
+
+
+	var bargroup = svg.append("g")
+      .attr("fill", "darkgreen")
+    
+
+    var xAxis = d3.axisTop(xScaler).tickFormat(d => d + "¢");
+
+    var axisView = svg.append("g")
+       				  .attr("transform","translate("+margin.left+","+margin.top+")")
+      				  .call(xAxis);
+       
+
+    svg.append("g").append("line")
+       .attr("x1",margin.left+0.5)
+       .attr("x2",margin.left+0.5)
+       .attr("y1",margin.top)
+       .attr("y2",margin.top + kamloopsData.length * barheight * 1.2)
+       .attr("fill","none")
+       .style("stroke","#000");
+
+    svg.append("text")
+       .style("text-anchor","middle")
+       .attr("x",width/2)
+       .attr("y",titleHeight)
+       .text("Tree Bid Price Per Company Per Region");
+
+
+    var vanSwitch = svg.append("g")
+    				   .attr("transform","translate("+margin.left+","+10+")")
+    				   .style("cursor","pointer");
+    				   
+
+    var kamSwitch = svg.append("g")
+    				   .attr("transform","translate("+margin.left+","+30+")")
+    				   .style("cursor","pointer");
+
+    var circleX = 5;
+    var circleY = 8;
+    var textX = 9 + circleX;
+    var textY = 13;
+
+    vanSwitch.append("circle")
+    		 .attr("cx", circleX)
+    	     .attr("cy", circleY)
+    	     .attr("r",6)
+    	     .attr("fill","#000");
+
+   	vanSwitch.append("circle")
+    		 .attr("cx", circleX)
+    	     .attr("cy", circleY)
+    	     .attr("r",5)
+    	     .attr("fill","#fff");
+
+   	var innerVan = vanSwitch.append("circle")
+    		 				.attr("cx", circleX)
+				    	    .attr("cy", circleY)
+				    	    .attr("r",3)
+				    	    .attr("fill","#fff");
+
+   	vanSwitch.append("text")
+   			 .attr("x",textX)
+   			 .attr("y",textY)
+   			 .text("Vanderhoof");
+
+
+   	kamSwitch.append("circle")
+    		 .attr("cx", circleX)
+    	     .attr("cy", circleY)
+    	     .attr("r",6)
+    	     .attr("fill","#000");
+
+   	kamSwitch.append("circle")
+    		 .attr("cx", circleX)
+    	     .attr("cy", circleY)
+    	     .attr("r",5)
+    	     .attr("fill","#fff");
+
+   	kamSwitch.append("text")
+   			 .attr("x",textX)
+   			 .attr("y",textY)
+   			 .text("Kamloops");
+
+   	var innerKam = kamSwitch.append("circle")
+    		 				.attr("cx", circleX)
+				    	    .attr("cy", circleY)
+				    	    .attr("r",3)
+				    	    .attr("fill","#000");
+
+
+	kamSwitch.on("click",function(){
+	 	swapView(true);
+	 	innerKam.attr("fill", "#000");
+		innerVan.attr("fill", "#fff");
+	});
+
+	vanSwitch.on("click",function(){
+	 	swapView(false);
+	 	innerKam.attr("fill", "#fff");
+		innerVan.attr("fill", "#000");
+	})
+
+
+	function swapView(kamClicked){
+		if((kamClicked && !isKamloops) || (!kamClicked && isKamloops)){
+			hide();
+		}
+	}
+
+
+    show();
+
+
+    function hide(){
+    	bargroup.selectAll("rect")
+    			.transition()
+    			.delay((d,i) => 100*i)
+				.duration(600)
+				.attr("width", 0)
+				.remove();
+
+		bargroup.selectAll("text")
+				.transition()
+				.delay((d,i) => 100*i)
+				.duration(400)
+				.style("opacity",1e-6)
+				.remove()
+
+		isKamloops = !isKamloops;
+    	
+    	xScaler.domain([0, d3.max(isKamloops?kamloopsData:vanderhoofData, d => d.price)]).nice();
+
+    	axisView.transition()
+    			.duration(1100)
+    			.call(xAxis);
+
+		bargroup.transition()
+				.duration(1150)
+				.on("end",show);			
+    }
+
+    function show(){
+
+
+    	bargroup.selectAll("g")
+    			.remove();
+    	bar = bargroup.selectAll("g")
+				      .data(isKamloops?kamloopsData:vanderhoofData)
+					  .enter()
+					  .append("g")
+					  .attr("transform", (d, i) => "translate("+margin.left+","+ (margin.top + i * barheight * 1.2)+")");
+
+		bar.append("rect")
+           .transition()
+           .delay((d,i) => 100*i)
+		   .duration(600)
+		   .attr("width", d => xScaler(d.price))
+           .attr("height", barheight);
+
+	    bar.append("text")
+	       .attr("x", -6)
+	       .attr("y", barheight / 2)
+	       .attr("dy", ".35em")
+	       .style("text-anchor","end")
+	       .attr("fill","#000")
+	       .style("font-size","13px")
+	       .text(function(d) { return d.company; })
+	       .style("opacity",1e-6)
+	       .transition()
+	       .delay((d,i) => 100*i)
+		   .duration(600)
+		   .style("opacity",1);
+
+	    bar.append("text")
+	       .attr("x",d => xScaler(d.price) - 6)
+	       .attr("dy", ".35em")
+	       .style("text-anchor","end")
+	       .attr("y", barheight / 2)
+	       .attr("fill","#fff")
+	       .style("font-size","12px")
+	       .style("font-family","arial")
+	       .text(function(d) { return d.price; })
+	       .style("opacity",1e-6)
+	       .transition()
+	       .delay((d,i) => 100*i)
+		   .duration(600)
+		   .style("opacity",1);;
+    }
+
+	
+</script>
+
+</body>
+</html>
